@@ -395,8 +395,8 @@ CLOUD (e.g., AWS / Azure)
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | Sensor data flood during peak hours | High | Medium | Kafka absorbs spikes; Sensor Ingestion auto-scales |
-| Payment gateway outage | Medium | High | Circuit breaker; session remains active; retry queue |
-| Underground connectivity loss | High | Medium | Local gateway buffering + store-and-forward |
+| Payment gateway outage | Medium | High | Contract a secondary payment provider as hot standby. Implement payment provider abstraction layer to enable failover within 60 seconds |
+| Underground connectivity loss | High | Medium | Local gateway buffering + store-and-forward.  For deep basements, deploy LoRaWAN or Wi-Fi mesh as alternative backhaul |
 | Sensor battery/hardware failure | High | Low–Medium | Heartbeat monitoring; `UNKNOWN` state; maintenance alert |
 | Driver data breach | Low | High | Encryption at rest/transit; tokenised payments; RBAC |
 | Dynamic pricing abuse (price too high) | Low | Medium | City admin sets min/max pricing caps enforced by Pricing Service |
@@ -418,4 +418,3 @@ This architecture meets the six quality attributes identified: **Availability, S
 
 ---
 
-*End of Document*
