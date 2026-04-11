@@ -88,7 +88,7 @@ Five key quality attributes are selected based on the system's context:
 - **Scenario:** A driver is navigating to a space; occupancy changes must be reflected in the app within 5 seconds.
 - **Target:** End-to-end latency from sensor event to driver app update ≤ 5 seconds (p95)
 
-### QA6 — Modifiability (Bonus)
+### QA6 — Modifiability
 > The system must accommodate new sensor types, new pricing models, and new payment providers without major rework.
 
 - **Scenario:** The city adds a new brand of sensor that reports in a different data format. Only the Sensor Adapter needs to change.
@@ -202,7 +202,7 @@ The system is built on a **microservices architecture** with an **event-driven b
 | **Event Stream Processing** | Kafka Streams processes sensor events and updates Redis in near-real-time (target < 2 sec pipeline) |
 | **Async Payments** | Payment confirmation is processed asynchronously — driver is shown "processing" immediately; session is active within 1–2 sec |
 
-### QA6 — Modifiability Tactics (Bonus)
+### QA6 — Modifiability Tactics
 
 | Tactic | Implementation |
 |---|---|
