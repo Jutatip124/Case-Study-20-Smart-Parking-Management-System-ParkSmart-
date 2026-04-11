@@ -101,7 +101,7 @@ Five key quality attributes are selected based on the system's context:
 ### 6.1 Use Case Diagram
 
 ```
-<img width="14380" height="5388" alt="image" src="https://github.com/user-attachments/assets/51c00088-3577-45f8-9e0d-ce5e09572486" />
+<img width="902" height="961" alt="123 drawio" src="https://github.com/user-attachments/assets/4515aab6-1a71-4a24-a1b7-49771fa2c005" />
 
 ```
 
@@ -119,7 +119,7 @@ Five key quality attributes are selected based on the system's context:
 The system is built on a **microservices architecture** with an **event-driven backbone** (message broker).
 
 ```
-<img width="6288" height="4504" alt="image" src="https://github.com/user-attachments/assets/3781881c-a857-4e5e-ae1f-5cd98a1d02b1" />
+<img width="1551" height="1106" alt="Untitled Diagram drawio" src="https://github.com/user-attachments/assets/2494666b-29c4-473f-bc7c-4d77c85bd726" />
 
 ```
 
