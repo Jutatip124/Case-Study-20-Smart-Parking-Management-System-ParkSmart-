@@ -1,30 +1,6 @@
 # ParkSmart — Smart Parking Management System
 ## Software Architecture Design Document
 
-**Case Study 20**
-**Course:** Software Architecture Design
-**Submitted by:** [Your Name / Student ID]
-**Date:** April 2026
-
----
-
-## Table of Contents
-
-1. [Overview](#1-overview)
-2. [Organisation & Stakeholders](#2-organisation--stakeholders)
-3. [Current Situation & Problems](#3-current-situation--problems)
-4. [Functional Requirements](#4-functional-requirements)
-5. [Quality Attributes](#5-quality-attributes)
-6. [Architecture Model](#6-architecture-model)
-   - 6.1 [Use Case Diagram](#61-use-case-diagram)
-   - 6.2 [Component Diagram](#62-component-diagram)
-   - 6.3 [Deployment View](#63-deployment-view)
-7. [Architecture Style Decision](#7-architecture-style-decision)
-8. [Selected Tactics for Quality Attributes](#8-selected-tactics-for-quality-attributes)
-9. [Technical Decisions](#9-technical-decisions)
-10. [Risk & Mitigation](#10-risk--mitigation)
-11. [Summary](#11-summary)
-
 ---
 
 ## 1. Overview
@@ -125,30 +101,8 @@ Five key quality attributes are selected based on the system's context:
 ### 6.1 Use Case Diagram
 
 ```
-+--------------------------------------------------------------+
-|                        ParkSmart System                       |
-|                                                              |
-|  [Find Available Space] <-- Driver                           |
-|  [Navigate to Space]    <-- Driver                           |
-|  [Start Parking Session] <-- Driver                          |
-|  [Pay for Parking]       <-- Driver                          |
-|  [Stop Parking Session]  <-- Driver                          |
-|                                                              |
-|  [Verify Parking Session] <-- Warden                         |
-|  [Lookup Licence Plate]   <-- Warden                         |
-|                                                              |
-|  [View Occupancy Dashboard] <-- Car Park Operator            |
-|  [View Revenue Dashboard]   <-- Car Park Operator            |
-|                                                              |
-|  [Set Dynamic Pricing]         <-- City Transport Authority  |
-|  [View City-Wide Usage Report] <-- City Transport Authority  |
-|                                                              |
-|  [Receive Sensor Fault Alert] <-- Maintenance Team           |
-|  [Report Fault Resolved]      <-- Maintenance Team           |
-|                                                              |
-|  [Report Occupancy Status] <-- IoT Sensor                    |
-|                                                              |
-+--------------------------------------------------------------+
+<img width="14380" height="5388" alt="image" src="https://github.com/user-attachments/assets/51c00088-3577-45f8-9e0d-ce5e09572486" />
+
 ```
 
 **Extended Use Cases (include relationships):**
@@ -165,76 +119,8 @@ Five key quality attributes are selected based on the system's context:
 The system is built on a **microservices architecture** with an **event-driven backbone** (message broker).
 
 ```
-+---------------------------+         +---------------------------+
-|     DRIVER MOBILE APP     |         |     WARDEN MOBILE APP     |
-|  - Map View               |         |  - Licence Plate Scanner  |
-|  - Session Management     |         |  - Session Validator      |
-|  - Payment UI             |         +---------------------------+
-+------------+--------------+                     |
-             |                                    |
-+------------v--------------+         +-----------v---------------+
-|       API GATEWAY          |<------->|    IDENTITY & AUTH        |
-|  - Rate Limiting           |         |  - JWT / OAuth 2.0        |
-|  - Auth Verification       |         |  - RBAC (Driver/Warden/   |
-|  - Request Routing         |         |    Operator/City/Maint.)  |
-+-----+------+------+--------+         +---------------------------+
-      |      |      |
-+-----v-+  +-v----+ +-v-----------+
-| SPACE |  |SESSION| |  PAYMENT   |
-|SERVICE|  |SERVICE| |  SERVICE   |
-|       |  |       | | (3rd party |
-| Find, |  |Start/ | |  gateway)  |
-| Map,  |  |Stop,  | +------------+
-| Occup.|  |Lookup |
-+--+----+  +--+----+
-   |          |
-   |    +-----v-----------+
-   |    | PRICING SERVICE |
-   |    | - Dynamic rules |
-   |    | - Thresholds    |
-   |    +-----------------+
-   |
-+--v------------------------------+
-|        MESSAGE BROKER           |
-|      (Apache Kafka)             |
-|  Topics:                        |
-|  - sensor.events                |
-|  - session.events               |
-|  - payment.events               |
-|  - alert.events                 |
-+--+--------+----------+----------+
-   |        |          |
-+--v----+ +-v-------+ +-v-----------+
-|SENSOR | |ANALYTICS| | ALERT/NOTIF |
-|INGESTION| SERVICE | | SERVICE     |
-|SERVICE| |         | | Maintenance |
-|       | |History, | | Emails/SMS  |
-|Normalise| Trends  | +-------------+
-|Validate |         |
-+--+----+ +---------+
-   |
-+--v------------------+
-|  SENSOR ADAPTER     |
-|  Layer (plug-in)    |
-|  - Format A parser  |
-|  - Format B parser  |
-|  - Format N parser  |
-+--+------------------+
-   |
-+--v----------------------------------+
-|        IoT SENSORS (4,120 units)    |
-|  On-street bays + car park sensors  |
-|  MQTT / HTTP / LoRaWAN              |
-+-------------------------------------+
+<img width="6288" height="4504" alt="image" src="https://github.com/user-attachments/assets/3781881c-a857-4e5e-ae1f-5cd98a1d02b1" />
 
-+------------------------------+      +-------------------------------+
-|  OPERATOR DASHBOARD (Web)    |      |  CITY ADMIN PORTAL (Web)      |
-|  - Live Occupancy            |      |  - City-wide Heatmap          |
-|  - Revenue Reports           |      |  - Pricing Policy Config      |
-+------------------------------+      +-------------------------------+
-        |                                          |
-        +------------------API-------------------->+
-                               Space Service / Analytics Service
 ```
 
 **Key Data Stores:**
@@ -247,51 +133,6 @@ The system is built on a **microservices architecture** with an **event-driven b
 | Event Store | Kafka (retained) | Message Broker — replay and auditing |
 | Analytics DB | TimescaleDB (time-series) | Analytics Service — historical trends |
 | Sensor Metadata | PostgreSQL | Sensor Ingestion — sensor registry and health |
-
----
-
-### 6.3 Deployment View
-
-```
-CLOUD (e.g., AWS / Azure)
-+-------------------------------------------------------+
-|  Load Balancer                                        |
-|  +------------------+  +------------------+           |
-|  | API Gateway (x2) |  | WebSocket Server |           |
-|  +------------------+  | (real-time push) |           |
-|                         +------------------+           |
-|  Kubernetes Cluster                                   |
-|  +------------+ +-------------+ +-----------------+   |
-|  | Space      | | Session     | | Payment         |   |
-|  | Service    | | Service     | | Service         |   |
-|  | (3 pods)   | | (3 pods)    | | (2 pods)        |   |
-|  +------------+ +-------------+ +-----------------+   |
-|  +------------+ +-------------+ +-----------------+   |
-|  | Sensor     | | Analytics   | | Alert           |   |
-|  | Ingestion  | | Service     | | Service         |   |
-|  | (5 pods)   | | (2 pods)    | | (2 pods)        |   |
-|  +------------+ +-------------+ +-----------------+   |
-|                                                       |
-|  +--------------------------------------------------+ |
-|  |           Apache Kafka Cluster (3 brokers)       | |
-|  +--------------------------------------------------+ |
-|                                                       |
-|  Databases (managed services):                        |
-|  Redis Cluster | PostgreSQL (RDS) | TimescaleDB       |
-+-------------------------------------------------------+
-         |
-         | MQTT / HTTPS / LoRaWAN
-         |
-+------------------------------------+
-|  SENSOR GATEWAYS (per car park)    |
-|  - Buffer messages locally         |
-|  - Retry on connectivity failure   |
-+------------------------------------+
-         |
-+------------------------------------+
-|  IoT SENSORS (4,120 units)         |
-+------------------------------------+
-```
 
 ---
 
