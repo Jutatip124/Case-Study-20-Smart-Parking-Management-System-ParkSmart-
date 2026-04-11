@@ -1,5 +1,5 @@
 # ParkSmart — Smart Parking Management System
-**Case Study 20**
+## Software Architecture Design Document
 
 ---
 
@@ -20,6 +20,7 @@ The primary city goal is to **reduce driver search time from 15–20 minutes to 
 | **Car Park Operators** | Private and city-owned site managers | Operator Dashboard (occupancy, revenue) |
 | **City Transport Authority** | Policy and pricing governance | Admin Portal (city-wide usage, dynamic pricing) |
 | **Maintenance Team** | Sensor and infrastructure maintenance | Alert System (sensor fault notifications) |
+| **IoT Sensors** | Hardware embedded in each space | Sensor Gateway (report occupancy status) |
 
 ---
 
@@ -87,7 +88,7 @@ Five key quality attributes are selected based on the system's context:
 - **Scenario:** A driver is navigating to a space; occupancy changes must be reflected in the app within 5 seconds.
 - **Target:** End-to-end latency from sensor event to driver app update ≤ 5 seconds (p95)
 
-### QA6 — Modifiability (Bonus)
+### QA6 — Modifiability
 > The system must accommodate new sensor types, new pricing models, and new payment providers without major rework.
 
 - **Scenario:** The city adds a new brand of sensor that reports in a different data format. Only the Sensor Adapter needs to change.
@@ -99,32 +100,7 @@ Five key quality attributes are selected based on the system's context:
 
 ### 6.1 Use Case Diagram
 
-```
-+--------------------------------------------------------------+
-|                        ParkSmart System                       |
-|                                                              |
-|  [Find Available Space] <-- Driver                           |
-|  [Navigate to Space]    <-- Driver                           |
-|  [Start Parking Session] <-- Driver                          |
-|  [Pay for Parking]       <-- Driver                          |
-|  [Stop Parking Session]  <-- Driver                          |
-|                                                              |
-|  [Verify Parking Session] <-- Warden                         |
-|  [Lookup Licence Plate]   <-- Warden                         |
-|                                                              |
-|  [View Occupancy Dashboard] <-- Car Park Operator            |
-|  [View Revenue Dashboard]   <-- Car Park Operator            |
-|                                                              |
-|  [Set Dynamic Pricing]         <-- City Transport Authority  |
-|  [View City-Wide Usage Report] <-- City Transport Authority  |
-|                                                              |
-|  [Receive Sensor Fault Alert] <-- Maintenance Team           |
-|  [Report Fault Resolved]      <-- Maintenance Team           |
-|                                                              |
-|  [Report Occupancy Status] <-- IoT Sensor                    |
-|                                                              |
-+--------------------------------------------------------------+
-```
+<img src="12drawio.png" alt="System Diagram 12" width="600">
 
 **Extended Use Cases (include relationships):**
 
@@ -139,78 +115,7 @@ Five key quality attributes are selected based on the system's context:
 
 The system is built on a **microservices architecture** with an **event-driven backbone** (message broker).
 
-```
-+---------------------------+         +---------------------------+
-|     DRIVER MOBILE APP     |         |     WARDEN MOBILE APP     |
-|  - Map View               |         |  - Licence Plate Scanner  |
-|  - Session Management     |         |  - Session Validator      |
-|  - Payment UI             |         +---------------------------+
-+------------+--------------+                     |
-             |                                    |
-+------------v--------------+         +-----------v---------------+
-|       API GATEWAY          |<------->|    IDENTITY & AUTH        |
-|  - Rate Limiting           |         |  - JWT / OAuth 2.0        |
-|  - Auth Verification       |         |  - RBAC (Driver/Warden/   |
-|  - Request Routing         |         |    Operator/City/Maint.)  |
-+-----+------+------+--------+         +---------------------------+
-      |      |      |
-+-----v-+  +-v----+ +-v-----------+
-| SPACE |  |SESSION| |  PAYMENT   |
-|SERVICE|  |SERVICE| |  SERVICE   |
-|       |  |       | | (3rd party |
-| Find, |  |Start/ | |  gateway)  |
-| Map,  |  |Stop,  | +------------+
-| Occup.|  |Lookup |
-+--+----+  +--+----+
-   |          |
-   |    +-----v-----------+
-   |    | PRICING SERVICE |
-   |    | - Dynamic rules |
-   |    | - Thresholds    |
-   |    +-----------------+
-   |
-+--v------------------------------+
-|        MESSAGE BROKER           |
-|      (Apache Kafka)             |
-|  Topics:                        |
-|  - sensor.events                |
-|  - session.events               |
-|  - payment.events               |
-|  - alert.events                 |
-+--+--------+----------+----------+
-   |        |          |
-+--v----+ +-v-------+ +-v-----------+
-|SENSOR | |ANALYTICS| | ALERT/NOTIF |
-|INGESTION| SERVICE | | SERVICE     |
-|SERVICE| |         | | Maintenance |
-|       | |History, | | Emails/SMS  |
-|Normalise| Trends  | +-------------+
-|Validate |         |
-+--+----+ +---------+
-   |
-+--v------------------+
-|  SENSOR ADAPTER     |
-|  Layer (plug-in)    |
-|  - Format A parser  |
-|  - Format B parser  |
-|  - Format N parser  |
-+--+------------------+
-   |
-+--v----------------------------------+
-|        IoT SENSORS (4,120 units)    |
-|  On-street bays + car park sensors  |
-|  MQTT / HTTP / LoRaWAN              |
-+-------------------------------------+
-
-+------------------------------+      +-------------------------------+
-|  OPERATOR DASHBOARD (Web)    |      |  CITY ADMIN PORTAL (Web)      |
-|  - Live Occupancy            |      |  - City-wide Heatmap          |
-|  - Revenue Reports           |      |  - Pricing Policy Config      |
-+------------------------------+      +-------------------------------+
-        |                                          |
-        +------------------API-------------------->+
-                               Space Service / Analytics Service
-```
+<img src="13.drawio.png" alt="System Diagram 12" width="1000">
 
 **Key Data Stores:**
 
@@ -222,51 +127,6 @@ The system is built on a **microservices architecture** with an **event-driven b
 | Event Store | Kafka (retained) | Message Broker — replay and auditing |
 | Analytics DB | TimescaleDB (time-series) | Analytics Service — historical trends |
 | Sensor Metadata | PostgreSQL | Sensor Ingestion — sensor registry and health |
-
----
-
-### 6.3 Deployment View
-
-```
-CLOUD (e.g., AWS / Azure)
-+-------------------------------------------------------+
-|  Load Balancer                                        |
-|  +------------------+  +------------------+           |
-|  | API Gateway (x2) |  | WebSocket Server |           |
-|  +------------------+  | (real-time push) |           |
-|                         +------------------+           |
-|  Kubernetes Cluster                                   |
-|  +------------+ +-------------+ +-----------------+   |
-|  | Space      | | Session     | | Payment         |   |
-|  | Service    | | Service     | | Service         |   |
-|  | (3 pods)   | | (3 pods)    | | (2 pods)        |   |
-|  +------------+ +-------------+ +-----------------+   |
-|  +------------+ +-------------+ +-----------------+   |
-|  | Sensor     | | Analytics   | | Alert           |   |
-|  | Ingestion  | | Service     | | Service         |   |
-|  | (5 pods)   | | (2 pods)    | | (2 pods)        |   |
-|  +------------+ +-------------+ +-----------------+   |
-|                                                       |
-|  +--------------------------------------------------+ |
-|  |           Apache Kafka Cluster (3 brokers)       | |
-|  +--------------------------------------------------+ |
-|                                                       |
-|  Databases (managed services):                        |
-|  Redis Cluster | PostgreSQL (RDS) | TimescaleDB       |
-+-------------------------------------------------------+
-         |
-         | MQTT / HTTPS / LoRaWAN
-         |
-+------------------------------------+
-|  SENSOR GATEWAYS (per car park)    |
-|  - Buffer messages locally         |
-|  - Retry on connectivity failure   |
-+------------------------------------+
-         |
-+------------------------------------+
-|  IoT SENSORS (4,120 units)         |
-+------------------------------------+
-```
 
 ---
 
@@ -336,7 +196,7 @@ CLOUD (e.g., AWS / Azure)
 | **Event Stream Processing** | Kafka Streams processes sensor events and updates Redis in near-real-time (target < 2 sec pipeline) |
 | **Async Payments** | Payment confirmation is processed asynchronously — driver is shown "processing" immediately; session is active within 1–2 sec |
 
-### QA6 — Modifiability Tactics (Bonus)
+### QA6 — Modifiability Tactics
 
 | Tactic | Implementation |
 |---|---|
@@ -370,8 +230,8 @@ CLOUD (e.g., AWS / Azure)
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | Sensor data flood during peak hours | High | Medium | Kafka absorbs spikes; Sensor Ingestion auto-scales |
-| Payment gateway outage | Medium | High | Contract a secondary payment provider as hot standby. Implement payment provider abstraction layer to enable failover within 60 seconds |
-| Underground connectivity loss | High | Medium | Local gateway buffering + store-and-forward.  For deep basements, deploy LoRaWAN or Wi-Fi mesh as alternative backhaul |
+| Payment gateway outage | Medium | High | Circuit breaker; session remains active; retry queue |
+| Underground connectivity loss | High | Medium | Local gateway buffering + store-and-forward |
 | Sensor battery/hardware failure | High | Low–Medium | Heartbeat monitoring; `UNKNOWN` state; maintenance alert |
 | Driver data breach | Low | High | Encryption at rest/transit; tokenised payments; RBAC |
 | Dynamic pricing abuse (price too high) | Low | Medium | City admin sets min/max pricing caps enforced by Pricing Service |
@@ -393,3 +253,4 @@ This architecture meets the six quality attributes identified: **Availability, S
 
 ---
 
+*End of Document*
