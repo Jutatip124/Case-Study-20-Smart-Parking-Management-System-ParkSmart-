@@ -1,29 +1,5 @@
 # ParkSmart — Smart Parking Management System
-## Software Architecture Design Document
-
 **Case Study 20**
-**Course:** Software Architecture Design
-**Submitted by:** [Your Name / Student ID]
-**Date:** April 2026
-
----
-
-## Table of Contents
-
-1. [Overview](#1-overview)
-2. [Organisation & Stakeholders](#2-organisation--stakeholders)
-3. [Current Situation & Problems](#3-current-situation--problems)
-4. [Functional Requirements](#4-functional-requirements)
-5. [Quality Attributes](#5-quality-attributes)
-6. [Architecture Model](#6-architecture-model)
-   - 6.1 [Use Case Diagram](#61-use-case-diagram)
-   - 6.2 [Component Diagram](#62-component-diagram)
-   - 6.3 [Deployment View](#63-deployment-view)
-7. [Architecture Style Decision](#7-architecture-style-decision)
-8. [Selected Tactics for Quality Attributes](#8-selected-tactics-for-quality-attributes)
-9. [Technical Decisions](#9-technical-decisions)
-10. [Risk & Mitigation](#10-risk--mitigation)
-11. [Summary](#11-summary)
 
 ---
 
