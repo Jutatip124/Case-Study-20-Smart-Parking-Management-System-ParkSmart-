@@ -20,7 +20,6 @@ The primary city goal is to **reduce driver search time from 15–20 minutes to 
 | **Car Park Operators** | Private and city-owned site managers | Operator Dashboard (occupancy, revenue) |
 | **City Transport Authority** | Policy and pricing governance | Admin Portal (city-wide usage, dynamic pricing) |
 | **Maintenance Team** | Sensor and infrastructure maintenance | Alert System (sensor fault notifications) |
-| **IoT Sensors** | Hardware embedded in each space | Sensor Gateway (report occupancy status) |
 
 ---
 
@@ -253,4 +252,3 @@ This architecture meets the six quality attributes identified: **Availability, S
 
 ---
 
-*End of Document*
